@@ -127,6 +127,7 @@ func (h *handler) handleBatch(msgs []*jsonrpcMessage) {
 
 	// Process calls on a goroutine because they may block indefinitely:
 	h.startCallProc(func(cp *callProc) {
+		wrote := false
 		responseBytes := 0
 		resps := make([]*jsonrpcMessage, 0, len(msgs))
 
@@ -139,13 +140,14 @@ func (h *handler) handleBatch(msgs []*jsonrpcMessage) {
 					h.log.Warn("response too large: ", calls)
 					h.log.Warn("response too large: ", calls[i+1:])
 					err := &internalServerError{errCodeResponseTooLarge, errMsgResponseTooLarge}
-					h.respondWithError(cp.ctx, calls[i+1:], err)
+					h.respondWithError(cp.ctx, calls[i+1:], resps, err)
+					wrote = true
 					break
 				}
 			}
 		}
 		h.addSubscriptions(cp.notifiers)
-		if len(resps) > 0 {
+		if len(resps) > 0 && !wrote {
 			h.conn.writeJSON(cp.ctx, resps)
 		}
 		for _, n := range cp.notifiers {
@@ -168,15 +170,14 @@ func (h *handler) respondWithBatchTooLarge(cp *callProc, batch []*jsonrpcMessage
 	h.conn.writeJSON(cp.ctx, []*jsonrpcMessage{resp})
 }
 
-func (h *handler) respondWithError(ctx context.Context, batch []*jsonrpcMessage, err error) {
-	var resp []*jsonrpcMessage
-
-	for _, msg := range batch {
+func (h *handler) respondWithError(ctx context.Context, calls, resp []*jsonrpcMessage, err error) {
+	result := resp
+	for _, msg := range calls {
 		if !msg.isNotification() {
-			resp = append(resp, msg.errorResponse(err))
+			result = append(result, msg.errorResponse(err))
 		}
 	}
-	h.conn.writeJSON(ctx, resp)
+	h.conn.writeJSON(ctx, result)
 }
 
 // handleMsg handles a single non-batch message.
