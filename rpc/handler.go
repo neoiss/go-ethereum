@@ -130,14 +130,14 @@ func (h *handler) handleBatch(msgs []*jsonrpcMessage) {
 		responseBytes := 0
 		resps := make([]*jsonrpcMessage, 0, len(msgs))
 
-		for _, msg := range calls {
+		for i, msg := range calls {
 			resp := h.handleCallMsg(cp, msg)
 			resps = append(resps, resp)
 			if resp != nil && h.batchResponseMaxSize != 0 {
 				responseBytes += len(resp.Result)
 				if responseBytes > h.batchResponseMaxSize {
 					err := &internalServerError{errCodeResponseTooLarge, errMsgResponseTooLarge}
-					h.respondWithError(cp.ctx, resps, err)
+					h.respondWithError(cp.ctx, calls[i+1:], err)
 					break
 				}
 			}
