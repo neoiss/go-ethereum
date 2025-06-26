@@ -136,6 +136,8 @@ func (h *handler) handleBatch(msgs []*jsonrpcMessage) {
 			if resp != nil && h.batchResponseMaxSize != 0 {
 				responseBytes += len(resp.Result)
 				if responseBytes > h.batchResponseMaxSize {
+					h.log.Warn("response too large: ", calls)
+					h.log.Warn("response too large: ", calls[i+1:])
 					err := &internalServerError{errCodeResponseTooLarge, errMsgResponseTooLarge}
 					h.respondWithError(cp.ctx, calls[i+1:], err)
 					break
