@@ -126,6 +126,7 @@ func (s *Server) serveSingleRequest(ctx context.Context, codec ServerCodec) {
 		}
 		return
 	}
+	log.Info("Handling request", "batch", batch, "size", len(reqs))
 	if batch {
 		h.handleBatch(reqs)
 	} else {

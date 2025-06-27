@@ -104,7 +104,7 @@ func (h *handler) handleBatch(msgs []*jsonrpcMessage) {
 		})
 		return
 	}
-	h.log.Info("handleBatch", "batchRequestLimit", h.batchRequestLimit, "batchResponseMaxSize", h.batchResponseMaxSize)
+	h.log.Info("Handling batch messages", "batchRequestLimit", h.batchRequestLimit, "batchResponseMaxSize", h.batchResponseMaxSize, "batchSize", len(msgs))
 
 	// Apply limit on total number of requests.
 	if h.batchRequestLimit != 0 && len(msgs) > h.batchRequestLimit {
@@ -137,8 +137,6 @@ func (h *handler) handleBatch(msgs []*jsonrpcMessage) {
 			if resp != nil && h.batchResponseMaxSize != 0 {
 				responseBytes += len(resp.Result)
 				if responseBytes > h.batchResponseMaxSize {
-					h.log.Warn("response too large: ", calls)
-					h.log.Warn("response too large: ", calls[i+1:])
 					err := &internalServerError{errCodeResponseTooLarge, errMsgResponseTooLarge}
 					h.respondWithError(cp.ctx, calls[i+1:], resps, err)
 					wrote = true

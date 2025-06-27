@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ethereum/go-ethereum/log"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -257,7 +256,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	codec := newHTTPServerConn(r, w)
 	defer codec.close()
 	s.serveSingleRequest(ctx, codec)
-	log.Info("ServeHTTP", "batchItemLimit", s.batchItemLimit, "batchResponseLimit", s.batchResponseLimit)
 }
 
 // validateRequest returns a non-zero response code and error message if the
